@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FoodConnect</title>
+<link rel="icon" href="/static/icons/favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<!-- Flask finds this file in the static folder. The JavaScript files are at the bottom of the page. -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- Top bar: logo, page links and who is logged in -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="#"><span class="logo-mark"><img class="icon" src="/static/icons/bag.svg" alt=""></span>FoodConnect</a>
+    <nav class="nav" id="nav" aria-label="Pages"></nav>
+    <div class="who" id="who" hidden>
+      <div class="who-text"><span class="who-name" id="who-name"></span><span class="who-role" id="who-role"></span></div>
+      <button class="btn btn-grey btn-small" id="logout" type="button">Log out</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- Shown when the page can't reach Flask -->
+  <p class="notice" id="connection-error" role="alert" hidden></p>
+
+  <!-- PAGE: Log in (everyone) -->
+  <section class="page" id="page-login">
+    <div class="columns">
+      <form class="card" id="login-form" novalidate>
+        <h1>Log in to FoodConnect</h1>
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" autocomplete="username" placeholder="name@example.com">
+        </div>
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password">
+        </div>
+        <p class="error" id="login-error" role="alert" hidden></p>
+        <div><button class="btn btn-black" type="submit">Log in</button></div>
+      </form>
+      <div class="card">
+        <div class="list-head"><h2>Demo accounts</h2><span class="small muted">Password: demo1234</span></div>
+        <ul class="accounts" id="demo-accounts"></ul>
+        <p class="small muted">This demo uses sample data. Every browser window shares the same data, so you can log in as Sara in one window and as Tom in another. Restart the server to start again.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: My donations (household) -->
+  <section class="page" id="page-donate" hidden>
+    <div class="page-head">
+      <h1>My donations</h1>
+      <p>Offer unopened food that has a date on the package. A volunteer nearby picks it up.</p>
+    </div>
+    <div class="columns">
+      <div class="main-column">
+        <div>
+          <h2>What food is it?</h2>
+          <p class="muted">Choose one, then set how many packs, cans or jars.</p>
+        </div>
+        <label class="search">
+          <img class="icon" src="/static/icons/search.svg" alt="">
+          <input id="donate-search" type="search" placeholder="Search products" aria-label="Search products">
+        </label>
+        <div class="chips" id="donate-chips" role="group" aria-label="Category">
+          <button class="chip" type="button" data-category="All" aria-pressed="true">All</button>
+          <button class="chip" type="button" data-category="Pasta, rice and grains" aria-pressed="false">Pasta, rice and grains</button>
+          <button class="chip" type="button" data-category="Beans and legumes" aria-pressed="false">Beans and legumes</button>
+          <button class="chip" type="button" data-category="Vegetables and fruit" aria-pressed="false">Vegetables and fruit</button>
+          <button class="chip" type="button" data-category="Dairy" aria-pressed="false">Dairy</button>
+          <button class="chip" type="button" data-category="Oil and spreads" aria-pressed="false">Oil and spreads</button>
+          <button class="chip" type="button" data-category="Fish and meat" aria-pressed="false">Fish and meat</button>
+        </div>
+        <div class="tiles" id="product-tiles"></div>
+      </div>
+
+      <div class="side-column">
+        <div class="card">
+          <h2>New donation</h2>
+          <div id="donate-summary"></div>
+          <div class="field">
+            <label for="donate-date">Date on the package</label>
+            <input id="donate-date" type="date">
+          </div>
+          <p class="error" id="donate-error" role="alert" hidden></p>
+          <p class="success" id="donate-ok" role="status" hidden></p>
+          <button class="btn btn-black btn-wide" id="donate-button" type="button">Offer donation</button>
+          <p class="small muted" id="donate-address"></p>
+        </div>
+        <div class="list-head"><h2>Your donations</h2><span class="small muted" id="donate-count"></span></div>
+        <div class="list" id="my-donations"></div>
+      </div>
+    </div>
+
+    <!-- On a phone: a black bar at the bottom shows what you chose -->
+    <div class="basket-bar" id="basket-bar" hidden>
+      <b id="basket-text"></b>
+      <button class="btn btn-white btn-small" id="basket-button" type="button">Add date</button>
+    </div>
+  </section>
+
+  <!-- PAGE: Scan station (volunteer) -->
+  <section class="page" id="page-scan" hidden>
+    <div class="page-head">
+      <h1>Scan station</h1>
+      <p>Choose In, Out or Waste, then scan each item.</p>
+    </div>
+    <div class="columns">
+      <div class="main-column">
+        <div class="modes" role="group" aria-label="What are you doing?">
+          <button class="mode" type="button" data-mode="in" aria-pressed="true"><img class="icon" src="/static/icons/in.svg" alt=""><span><b>In</b><small>Food coming in</small></span></button>
+          <button class="mode" type="button" data-mode="out" aria-pressed="false"><img class="icon" src="/static/icons/out.svg" alt=""><span><b>Out</b><small>Handing out</small></span></button>
+          <button class="mode" type="button" data-mode="waste" aria-pressed="false"><img class="icon" src="/static/icons/waste.svg" alt=""><span><b>Waste</b><small>Throwing away</small></span></button>
+        </div>
+
+        <form class="card" id="scan-form" autocomplete="off">
+          <div class="scan-head">
+            <h2 class="scan-title" id="scan-title"><img class="icon" src="/static/icons/in.svg" alt="">Scanning food in</h2>
+            <span class="ready"><img class="icon" src="/static/icons/check.svg" alt=""><span class="ready-on">Ready to scan</span><span class="ready-off">Not ready. Click the scan field.</span></span>
+          </div>
+          <label class="scan-field">
+            <img class="icon" src="/static/icons/barcode.svg" alt="">
+            <input id="scan-input" inputmode="numeric" placeholder="Scan a barcode" aria-label="Barcode">
+          </label>
+          <div class="feedback" id="feedback" aria-live="polite" hidden></div>
+        </form>
+
+        <!-- Shown in In mode after a scan: how many, and the date on the package -->
+        <form class="card card-active" id="add-form" novalidate hidden>
+          <div class="chosen">
+            <span class="chosen-picture" id="add-picture"></span>
+            <div><h2 id="add-title">Product</h2><span class="small muted" id="add-info"></span></div>
+            <span id="add-status"></span>
+          </div>
+          <div class="add-row">
+            <div class="field">
+              <span class="label" id="add-qty-label">How many?</span>
+              <div class="stepper stepper-dark">
+                <button id="add-minus" type="button" aria-label="Remove one">−</button>
+                <input id="add-qty" value="1" inputmode="numeric" aria-labelledby="add-qty-label">
+                <button id="add-plus" type="button" aria-label="Add one">+</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="add-date">Date on the package</label>
+              <input id="add-date" type="date">
+            </div>
+          </div>
+          <p class="error" id="add-error" role="alert" hidden></p>
+          <div class="buttons">
+            <button class="btn btn-black" type="submit">Put on the shelf</button>
+            <button class="btn btn-grey" id="add-cancel" type="button">Cancel</button>
+          </div>
+        </form>
+
+        <!-- Shown after an unknown barcode -->
+        <form class="card card-active" id="register-form" novalidate hidden>
+          <div><h2>Register product</h2><p class="small muted">Barcode <b id="register-code"></b></p></div>
+          <div class="field">
+            <label for="register-name">Product name</label>
+            <input id="register-name" placeholder="For example: Oat flakes">
+          </div>
+          <div class="field">
+            <label for="register-category">Category</label>
+            <select id="register-category">
+              <option value="">Choose a category</option>
+              <option>Pasta, rice and grains</option>
+              <option>Beans and legumes</option>
+              <option>Vegetables and fruit</option>
+              <option>Dairy</option>
+              <option>Oil and spreads</option>
+              <option>Fish and meat</option>
+            </select>
+          </div>
+          <div class="add-row">
+            <div class="field">
+              <label for="register-size">Pack size</label>
+              <input id="register-size" placeholder="For example: 500 g">
+            </div>
+            <div class="field">
+              <label for="register-minimum">Minimum stock</label>
+              <input id="register-minimum" type="number" min="0" max="500" value="10">
+            </div>
+          </div>
+          <p class="error" id="register-error" role="alert" hidden></p>
+          <div class="buttons">
+            <button class="btn btn-black" type="submit">Register product</button>
+            <button class="btn btn-grey" id="register-cancel" type="button">Cancel</button>
+          </div>
+        </form>
+
+        <div class="card">
+          <div><h2>Test without a scanner</h2><p class="small muted">Click a product to scan its barcode.</p></div>
+          <div class="test-tiles" id="test-tiles"></div>
+        </div>
+      </div>
+
+      <div class="side-column">
+        <div class="card">
+          <div><h2>Latest scans</h2><p class="small muted" id="week-totals"></p></div>
+          <ul class="scan-log" id="scan-log"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: Pickups (volunteer) -->
+  <section class="page" id="page-pickups" hidden>
+    <div class="page-head">
+      <h1>Pickups</h1>
+      <p>Accept a donation, pick it up, then scan it in at the scan station.</p>
+      <p class="error" id="pickups-error" role="alert" hidden></p>
+    </div>
+    <div class="columns">
+      <div class="half-column">
+        <div class="list-head"><h2>Waiting for a volunteer</h2><span class="small muted">Shortest date first</span></div>
+        <div class="list" id="waiting-list"></div>
+      </div>
+      <div class="half-column">
+        <div class="list-head"><h2>My pickups</h2><span class="small muted" id="pickup-count"></span></div>
+        <div class="list" id="my-pickups"></div>
+        <p class="small muted" id="done-list"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: Dashboard (manager) -->
+  <section class="page" id="page-dashboard" hidden>
+    <div class="page-head">
+      <h1>Dashboard</h1>
+      <p>Every scan at the scan station updates these numbers.</p>
+    </div>
+    <div class="numbers" id="numbers"></div>
+    <div class="columns">
+      <div class="card main-column">
+        <div class="list-head"><h2>Stock per product</h2><span class="small muted">Lowest first</span></div>
+        <label class="search">
+          <img class="icon" src="/static/icons/search.svg" alt="">
+          <input id="stock-search" type="search" placeholder="Search products" aria-label="Search products">
+        </label>
+        <div class="chips" id="stock-chips" role="group" aria-label="Category">
+          <button class="chip" type="button" data-category="All" aria-pressed="true">All</button>
+          <button class="chip" type="button" data-category="Pasta, rice and grains" aria-pressed="false">Pasta, rice and grains</button>
+          <button class="chip" type="button" data-category="Beans and legumes" aria-pressed="false">Beans and legumes</button>
+          <button class="chip" type="button" data-category="Vegetables and fruit" aria-pressed="false">Vegetables and fruit</button>
+          <button class="chip" type="button" data-category="Dairy" aria-pressed="false">Dairy</button>
+          <button class="chip" type="button" data-category="Oil and spreads" aria-pressed="false">Oil and spreads</button>
+          <button class="chip" type="button" data-category="Fish and meat" aria-pressed="false">Fish and meat</button>
+        </div>
+        <div class="table-box">
+          <table>
+            <thead><tr><th>Product</th><th class="num">On the shelf</th><th class="num hide-on-phone">Minimum</th><th>Status</th></tr></thead>
+            <tbody id="stock-table"></tbody>
+          </table>
+        </div>
+        <p class="muted" id="stock-empty" role="status" hidden>No products match. Clear the search or choose All.</p>
+      </div>
+      <div class="card side-column first-on-phone">
+        <h2>Needs attention</h2>
+        <ul class="attention" id="attention"></ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="list-head"><h2>Food in, out and waste</h2><span class="small muted" id="waste-rate"></span></div>
+      <div class="table-box">
+        <table>
+          <thead><tr><th>Week</th><th class="num">Came in</th><th class="num">Handed out</th><th class="num">Thrown away</th><th class="num hide-on-phone">Waste %</th></tr></thead>
+          <tbody id="flow-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: Shopping list (manager) -->
+  <section class="page" id="page-shopping" hidden>
+    <div class="page-head">
+      <h1>Shopping list</h1>
+      <p>Buy these amounts so the shelves don't run empty next week.</p>
+    </div>
+    <div class="card">
+      <h2>How the prediction works</h2>
+      <ol class="how">
+        <li><span class="how-number">1</span><div><b>Prediction</b><p class="muted">The average number handed out per week over the last 4 weeks.</p></div></li>
+        <li><span class="how-number">2</span><div><b>Extra</b><p class="muted">20% of the prediction, in case more people come.</p></div></li>
+        <li><span class="how-number">3</span><div><b>To buy</b><p class="muted">Prediction + extra − what is on the shelf. Never below 0.</p></div></li>
+      </ol>
+      <p class="example" id="example"></p>
+    </div>
+    <div class="card">
+      <div class="list-head"><h2>To buy for next week</h2><span class="small muted" id="runs-out-count"></span></div>
+      <div class="table-box">
+        <table>
+          <thead><tr><th>Product</th><th class="hide-on-phone">Handed out, last 4 weeks</th><th class="num hide-on-phone">Prediction</th><th class="num">On the shelf</th><th class="hide-on-phone">Next week</th><th class="num">To buy</th></tr></thead>
+          <tbody id="shopping-table"></tbody>
+        </table>
+      </div>
+      <div class="total-bar">
+        <p><span class="total-label">Total to buy</span><span class="total-number" id="buy-total"></span></p>
+        <button class="btn btn-white" id="copy-list" type="button"><img class="icon" src="/static/icons/copy.svg" alt="">Copy list</button>
+      </div>
+      <p class="success" id="copy-ok" role="status" hidden>List copied.</p>
+      <p class="error" id="copy-error" role="alert" hidden></p>
+      <!-- Only shown when the browser can't copy -->
+      <div class="field" id="copy-fallback" hidden>
+        <label for="copy-text">Select the text and copy it.</label>
+        <textarea id="copy-text" readonly></textarea>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- The JavaScript, one file per part of the website (in static/js).
+     Keep this order: the first files have the helpers that the others use,
+     and start.js comes last because it starts the page. -->
+<script src="{{ url_for('static', filename='js/helpers.js') }}"></script>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/stock.js') }}"></script>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+<script src="{{ url_for('static', filename='js/donate.js') }}"></script>
+<script src="{{ url_for('static', filename='js/scan.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pickups.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/shopping.js') }}"></script>
+<script src="{{ url_for('static', filename='js/start.js') }}"></script>
+</body>
+</html>

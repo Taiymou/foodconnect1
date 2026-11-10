@@ -1,0 +1,385 @@
+/* FoodConnect: black and white, with slightly rounded corners.
+   Colour is only used for problems: red = act now, orange = act soon. */
+
+:root {
+  --black: #161615;        /* text, main buttons, chosen things */
+  --grey-text: #5A5954;    /* second text */
+  --grey-hint: #6F6E69;    /* hints */
+  --grey-field: #8C8B85;   /* borders of fields */
+  --grey-line: #E6E5E1;    /* borders of cards, lines between rows */
+  --grey-fill: #EBEAE6;    /* grey buttons, chips, tags */
+  --grey-light: #F4F3F0;   /* tiles, search field, panels */
+  --white: #FFFFFF;
+  --red: #A3221A;
+  --red-light: #FBE9E7;
+  --orange: #8A4A00;
+  --orange-light: #FCEFDC;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }   /* hidden things stay hidden, also with display: flex */
+
+body {
+  margin: 0;
+  background: var(--white);
+  color: var(--black);
+  font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 32px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 20px; line-height: 1.3; font-weight: 700; }
+h3 { font-size: 16px; line-height: 1.35; font-weight: 700; }
+a { color: var(--black); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--black); outline-offset: 2px; }
+
+.muted { color: var(--grey-text); }
+.small { font-size: 13px; }
+.error { color: var(--red); font-weight: 700; }
+.success { font-weight: 700; }
+.icon { display: block; width: 20px; height: 20px; }
+
+
+/* ----- Top bar ----- */
+
+.topbar { position: sticky; top: 0; z-index: 10; background: var(--white); border-bottom: 1px solid var(--grey-line); }
+.topbar-inner {
+  max-width: 1264px;
+  margin: 0 auto;
+  padding: 14px 32px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 32px;
+}
+.logo { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; text-decoration: none; }
+.logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--black); display: flex; align-items: center; justify-content: center; }
+.logo-mark .icon { width: 18px; height: 18px; filter: invert(1); }   /* invert makes the black icon white */
+
+.nav { display: flex; gap: 4px; }
+.nav a { display: flex; align-items: center; height: 44px; padding: 0 16px; border-radius: 8px; font-weight: 700; text-decoration: none; }
+.nav a:hover { background: var(--grey-light); }
+.nav a[aria-current="page"] { background: var(--black); color: var(--white); }   /* the page you are on */
+.nav-icon { display: none; }   /* the icons only show on a phone */
+
+.who { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.who-text { display: flex; flex-direction: column; align-items: flex-end; }
+.who-name { font-weight: 700; line-height: 1.3; }
+.who-role { font-size: 13px; color: var(--grey-text); }
+
+
+/* ----- Page layout ----- */
+
+.wrap { max-width: 1264px; margin: 0 auto; padding: 40px 32px 64px; }
+.page { display: flex; flex-direction: column; gap: 32px; }
+.page-head { display: flex; flex-direction: column; gap: 8px; }
+.page-head p { max-width: 640px; font-size: 16px; color: var(--grey-text); }
+
+/* Columns side by side. On a small screen they go under each other. */
+.columns { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 32px; }
+.columns > * { flex: 1 1 360px; min-width: 0; }
+.main-column { flex: 999 1 560px; display: flex; flex-direction: column; gap: 16px; }
+.side-column { flex: 1 1 360px; display: flex; flex-direction: column; gap: 16px; }
+.half-column { display: flex; flex-direction: column; gap: 12px; }
+
+.card { padding: 24px; border: 1px solid var(--grey-line); border-radius: 12px; background: var(--white); display: flex; flex-direction: column; gap: 16px; }
+.card-active { padding: 23px; border: 2px solid var(--black); }   /* a form that waits for you */
+.list-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.list { display: flex; flex-direction: column; gap: 12px; }
+.notice { margin-bottom: 24px; padding: 16px; border-radius: 8px; background: var(--red-light); color: var(--red); font-weight: 700; }
+
+
+/* ----- Buttons: black = the main action, grey = other actions, outline = stop or undo ----- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.btn-black { background: var(--black); color: var(--white); }
+.btn-black:hover { background: #000000; }
+.btn-grey { background: var(--grey-fill); color: var(--black); }
+.btn-grey:hover { background: var(--grey-line); }
+.btn-outline { border: 1.5px solid var(--black); background: var(--white); color: var(--black); }
+.btn-outline:hover { background: var(--grey-light); }
+.btn-white { background: var(--white); color: var(--black); }
+.btn-small { height: 44px; padding: 0 16px; font-size: 14px; }
+.btn-wide { width: 100%; }
+.buttons { display: flex; flex-wrap: wrap; gap: 12px; }
+
+
+/* ----- Forms ----- */
+
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field label, .field .label { font-size: 14px; font-weight: 700; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid var(--grey-field);
+  border-radius: 8px;
+  background: var(--white);
+}
+.field textarea { resize: vertical; }
+.add-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 24px; }
+.add-row .field { flex: 1 1 200px; }
+
+/* The search field: grey, with a magnifying glass */
+.search { display: flex; align-items: center; gap: 10px; max-width: 360px; height: 48px; padding: 0 16px; border-radius: 8px; background: var(--grey-light); }
+.search input { flex: 1; min-width: 0; height: 44px; border: 0; background: transparent; outline: none; appearance: none; }
+.search:focus-within { outline: 3px solid var(--black); outline-offset: 2px; }
+
+
+/* ----- Tags: grey for normal, red and orange for problems ----- */
+
+.tag { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 6px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.tag-grey { background: var(--grey-fill); color: var(--black); }
+.tag-red { background: var(--red-light); color: var(--red); }
+.tag-orange { background: var(--orange-light); color: var(--orange); }
+
+
+/* ----- Chips: tap one to filter. The chip that is on is black. ----- */
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { height: 44px; padding: 0 16px; border: 0; border-radius: 8px; background: var(--grey-fill); font-size: 14px; font-weight: 700; cursor: pointer; }
+.chip:hover { background: var(--grey-line); }
+.chip[aria-pressed="true"] { background: var(--black); color: var(--white); }
+
+
+/* ----- Stepper: − and + around a number ----- */
+
+.stepper { display: inline-flex; align-items: center; height: 44px; border-radius: 8px; background: var(--grey-light); }
+.stepper button { width: 44px; height: 44px; border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; }
+.stepper button:disabled { color: var(--grey-field); cursor: default; }
+.stepper input { width: 40px; height: 44px; padding: 0; border: 0; background: transparent; text-align: center; font-weight: 800; }
+.stepper-dark { background: var(--black); color: var(--white); }   /* a chosen or changed amount */
+
+
+/* ----- Product tiles (household) ----- */
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+.tile { display: flex; flex-direction: column; gap: 10px; padding: 8px; border: 1px solid var(--grey-line); border-radius: 12px; cursor: pointer; }
+.tile:hover { border-color: var(--grey-field); }
+.tile-other { border-style: dashed; border-color: var(--grey-field); }
+.tile-chosen, .tile-chosen:hover { padding: 7px; border: 2px solid var(--black); }
+.tile-picture { position: relative; height: 120px; border-radius: 8px; background: var(--grey-light); display: flex; align-items: center; justify-content: center; }
+.tile-picture .icon { width: 44px; height: 44px; }
+.tile-add { position: absolute; right: 8px; bottom: 8px; width: 44px; height: 44px; border: 0; border-radius: 8px; background: var(--black); color: var(--white); font-size: 24px; font-weight: 700; cursor: pointer; }
+.tile .stepper { position: absolute; right: 8px; bottom: 8px; }   /* the stepper takes the place of the + */
+.tile-chosen .tile-picture { align-items: flex-start; padding-top: 16px; }   /* the picture moves up, so the stepper doesn't cover it */
+.tile-name { padding: 0 4px; font-weight: 700; line-height: 1.3; }
+.tile-size { padding: 0 4px 4px; font-size: 13px; color: var(--grey-text); }
+
+/* What you chose, in the "New donation" panel */
+.chosen { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; }
+.chosen > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.chosen b { font-size: 16px; }
+.chosen-picture { width: 56px; height: 56px; flex: none; border-radius: 8px; background: var(--grey-light); display: flex; align-items: center; justify-content: center; }
+.chosen-picture .icon { width: 28px; height: 28px; }
+
+/* On a laptop the black bar at the bottom is not needed */
+.basket-bar { display: none; }
+
+
+/* ----- Donation cards and the tracker ----- */
+
+.donation { gap: 14px; padding: 20px; }
+.donation-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.donation-top h3 { display: flex; align-items: center; gap: 10px; }
+.qty { display: inline-flex; align-items: center; height: 28px; padding: 0 8px; border-radius: 6px; background: var(--grey-light); font-size: 14px; font-weight: 800; }
+.address { display: flex; gap: 10px; padding: 12px; border-radius: 8px; background: var(--grey-light); }
+.address .icon { flex: none; margin-top: 2px; }
+.address b, .address span { display: block; }
+.two-buttons { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.two-buttons .btn { padding: 0 12px; white-space: normal; text-align: center; line-height: 1.2; }   /* long text wraps instead of sticking out */
+
+/* The 4 steps of a donation: done steps are grey, the current step is black, later steps are light */
+.tracker { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: 12px; font-weight: 600; color: var(--grey-hint); }
+.tracker li::before { content: ""; display: block; height: 6px; margin-bottom: 8px; border-radius: 3px; background: var(--grey-line); }
+.tracker .step-done { color: var(--grey-text); }
+.tracker .step-done::before { background: var(--grey-field); }
+.tracker .step-now { color: var(--black); font-weight: 800; }
+.tracker .step-now::before { background: var(--black); }
+
+
+/* ----- Log in ----- */
+
+.accounts { margin: 0; padding: 0; list-style: none; }
+.accounts li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 16px 0; border-top: 1px solid var(--grey-line); }
+.accounts b, .accounts span { display: block; }
+
+
+/* ----- Scan station ----- */
+
+/* In, Out and Waste: the mode you are in is black */
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 12px; background: var(--grey-light); }
+.mode { min-height: 60px; padding: 8px 12px; border: 0; border-radius: 8px; background: transparent; display: flex; align-items: center; justify-content: center; gap: 10px; text-align: left; cursor: pointer; }
+.mode .icon { width: 22px; height: 22px; }
+.mode b { display: block; font-size: 16px; font-weight: 800; line-height: 1.25; }
+.mode small { display: block; font-size: 12px; font-weight: 600; color: var(--grey-text); }
+.mode[aria-pressed="true"] { background: var(--black); color: var(--white); }
+.mode[aria-pressed="true"] small { color: #C9C8C2; }
+.mode[aria-pressed="true"] .icon { filter: invert(1); }
+
+.scan-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.scan-title { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; }
+.scan-title .icon { width: 24px; height: 24px; }
+
+/* The ready light: black "Ready to scan" while the scan field has focus */
+.ready { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 1.5px solid var(--black); border-radius: 8px; font-size: 13px; font-weight: 700; }
+.ready .icon { display: none; width: 16px; height: 16px; filter: invert(1); }
+.ready-on { display: none; }
+#scan-form:focus-within .ready { background: var(--black); color: var(--white); }
+#scan-form:focus-within .ready .icon { display: block; }
+#scan-form:focus-within .ready-on { display: inline; }
+#scan-form:focus-within .ready-off { display: none; }
+
+.scan-field { display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 18px; border: 2px solid var(--black); border-radius: 8px; }
+.scan-field .icon { width: 26px; height: 26px; }
+.scan-field input { flex: 1; min-width: 0; height: 56px; border: 0; outline: none; font-size: 22px; font-weight: 700; letter-spacing: 0.02em; }
+.scan-field:focus-within { outline: 4px solid var(--grey-line); }
+
+/* The box that says what happened after a scan */
+.feedback { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 8px; background: var(--grey-light); }
+.feedback .big { min-width: 56px; text-align: center; font-size: 36px; font-weight: 800; line-height: 1; }
+.feedback strong { display: block; font-size: 17px; line-height: 1.3; }
+.feedback-error { background: var(--red-light); color: var(--red); }
+
+/* Test without a scanner: one small tile per product */
+.test-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.test-tile { display: flex; flex-direction: column; gap: 2px; padding: 12px; border: 1px solid var(--grey-line); border-radius: 8px; background: var(--white); text-align: left; cursor: pointer; }
+.test-tile:hover { border-color: var(--black); }
+.test-tile-new { border-style: dashed; border-color: var(--grey-field); }
+.test-name { font-size: 14px; font-weight: 700; line-height: 1.3; }
+.test-size { font-size: 13px; color: var(--grey-text); }
+.test-stock { margin-top: auto; padding-top: 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; font-size: 13px; }
+
+/* Latest scans */
+.scan-log { margin: 0; padding: 0; list-style: none; }
+.scan-log li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--grey-line); }
+.log-icon { width: 40px; height: 40px; flex: none; border-radius: 8px; background: var(--grey-light); display: flex; align-items: center; justify-content: center; }
+.log-text { flex: 1; min-width: 0; }
+.log-text b, .log-text span, .log-count b, .log-count span { display: block; }
+.log-count { text-align: right; }
+
+
+/* ----- Tables ----- */
+
+.table-box { overflow-x: auto; }   /* a wide table scrolls inside this box */
+table { width: 100%; border-collapse: collapse; }
+th { padding: 10px 8px; border-bottom: 1px solid var(--grey-field); text-align: left; font-size: 13px; font-weight: 700; color: var(--grey-text); white-space: nowrap; }
+td { padding: 10px 8px; border-bottom: 1px solid var(--grey-line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.name { display: block; font-weight: 700; }
+.sub { display: block; font-size: 13px; color: var(--grey-text); }
+
+
+/* ----- Dashboard ----- */
+
+/* The 4 numbers at the top, with thin lines between them */
+.numbers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; border: 1px solid var(--grey-line); border-radius: 12px; background: var(--grey-line); overflow: hidden; }
+.number { padding: 20px 24px; background: var(--white); }
+.number b { display: block; font-size: 36px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em; }
+.number span { font-size: 14px; font-weight: 600; color: var(--grey-text); }
+
+.attention { margin: 0; padding: 0; list-style: none; }
+.attention li { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--grey-line); }
+.attention li:last-child { border-bottom: 0; padding-bottom: 0; }
+.attention a { font-weight: 700; text-underline-offset: 4px; }
+
+
+/* ----- Shopping list ----- */
+
+.how { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px 32px; }
+.how li { display: flex; align-items: flex-start; gap: 14px; }
+.how-number { width: 32px; height: 32px; flex: none; border-radius: 8px; background: var(--black); color: var(--white); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+.example { padding: 12px 16px; border-radius: 8px; background: var(--grey-light); }
+.suggested { display: block; margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--grey-text); }
+
+/* The black bar with the total and "Copy list" */
+.total-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 12px 12px 12px 20px; border-radius: 12px; background: var(--black); color: var(--white); }
+.total-label { margin-right: 12px; font-weight: 600; color: #C9C8C2; }
+.total-number { font-size: 28px; font-weight: 800; }
+
+
+/* ----- Phones ----- */
+
+@media (max-width: 760px) {
+  .topbar { position: static; }
+  .topbar-inner { padding: 8px 16px; }
+  .who-text { display: none; }
+  .wrap { padding: 24px 16px 180px; }   /* room at the bottom for the bars */
+  h1 { font-size: 26px; }
+
+  /* The page links move to a bar at the bottom of the screen, within reach of a thumb */
+  .nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    padding: 8px 8px 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));   /* stays above the home bar of an iPhone */
+    background: var(--white);
+    border-top: 1px solid var(--grey-line);
+  }
+  .nav:empty { display: none; }
+  .nav a { flex: 1; flex-direction: column; justify-content: center; gap: 4px; height: auto; min-height: 56px; padding: 0; font-size: 12px; color: var(--grey-text); }
+  .nav a:hover { background: transparent; }
+  .nav a[aria-current="page"] { background: transparent; color: var(--black); font-weight: 800; }
+  .nav-icon { display: flex; align-items: center; justify-content: center; width: 56px; height: 32px; border-radius: 8px; }
+  .nav a[aria-current="page"] .nav-icon { background: var(--black); }
+  .nav a[aria-current="page"] .icon { filter: invert(1); }
+
+  /* The black bar with what you chose, just above the page links */
+  .basket-bar {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 92px;
+    z-index: 9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 10px 10px 16px;
+    border-radius: 12px;
+    background: var(--black);
+    color: var(--white);
+  }
+
+  /* Chips scroll sideways, like in a grocery app */
+  .chips { flex-wrap: nowrap; overflow-x: auto; }
+  .chip { flex: none; }
+
+  .first-on-phone { order: -1; }   /* on a phone, what needs action comes first */
+}
+
+@media (max-width: 520px) {
+  .card { padding: 16px; }
+  .card-active { padding: 15px; }
+  .tiles { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .test-tiles { grid-template-columns: 1fr 1fr; }
+  .tile .stepper { left: 6px; right: 6px; justify-content: space-between; }
+  .mode { flex-direction: column; gap: 4px; text-align: center; }
+  .mode small { display: none; }
+  .numbers { grid-template-columns: 1fr 1fr; }
+  .number { padding: 14px 16px; }
+  .number b { font-size: 28px; }
+  .hide-on-phone { display: none; }
+  th { white-space: normal; }
+}

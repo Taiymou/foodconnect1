@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FoodConnect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800;900&family=Saira+Stencil+One&display=swap">
+<!-- Flask finds these two files in the static folder -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="#">
+      <span class="logo-mark"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M2 3h2.5v14H2zM6 3h1v14H6zM8.5 3h3v14h-3zM13 3h1v14h-1zM15.5 3H18v14h-2.5z"/></svg></span>
+      FoodConnect
+    </a>
+    <nav class="nav" id="nav" aria-label="Pages"></nav>
+    <div class="who" id="who" hidden>
+      <div><span class="who-name" id="who-name"></span><span class="who-role" id="who-role"></span></div>
+      <button class="btn btn-small" id="logout" type="button">Log out</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- PAGE: Log in (everyone). In Flask this could be templates/login.html -->
+  <section class="page" id="page-login">
+    <div class="grid-2">
+      <form class="card stack" id="login-form" novalidate>
+        <h1>Log in to FoodConnect</h1>
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" autocomplete="username" placeholder="name@example.com">
+        </div>
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password">
+        </div>
+        <p class="error" id="login-error" role="alert" hidden></p>
+        <div class="actions"><button class="btn btn-primary" type="submit">Log in</button></div>
+      </form>
+      <div class="card">
+        <div class="head"><h2>Demo accounts</h2><span class="muted small">Password: demo1234</span></div>
+        <ul class="accounts" id="demo-accounts"></ul>
+        <p class="muted small">This demo uses sample data. Reload the page to start again.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: My donations (household). In Flask this could be templates/donate.html -->
+  <section class="page" id="page-donate" hidden>
+    <div class="page-head">
+      <h1>My donations</h1>
+      <p>Offer unopened food that has a date on the package. A volunteer nearby picks it up.</p>
+    </div>
+    <div class="grid-form">
+      <form class="card stack" id="donate-form" novalidate>
+        <h2>Offer a donation</h2>
+        <div class="field">
+          <label for="donate-item">What food is it?</label>
+          <input id="donate-item" list="product-names" placeholder="For example: Brown rice">
+          <datalist id="product-names"></datalist>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="donate-qty">How many?</label>
+            <input id="donate-qty" type="number" min="1" max="50" value="1">
+            <span class="hint">Packs, cans or jars</span>
+          </div>
+          <div class="field">
+            <label for="donate-date">Date on the package</label>
+            <input id="donate-date" type="date">
+          </div>
+        </div>
+        <p class="error" id="donate-error" role="alert" hidden></p>
+        <p class="success" id="donate-ok" role="status" hidden></p>
+        <div class="actions"><button class="btn btn-primary" type="submit">Offer donation</button></div>
+        <p class="hint" id="donate-address"></p>
+      </form>
+      <div class="stack">
+        <p class="muted small" id="donate-count"></p>
+        <div class="list" id="my-donations"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: Scan station (volunteer). In Flask this could be templates/scan.html -->
+  <section class="page mode-in" id="page-scan" hidden>
+    <div class="page-head">
+      <h1>Scan station</h1>
+      <p>Choose In, Out or Waste, then scan each item.</p>
+    </div>
+    <div class="grid-wide">
+      <div class="stack">
+        <div class="modes" role="group" aria-label="What are you doing?">
+          <button class="mode-btn" type="button" data-mode="in" aria-pressed="true">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><path d="M5 17v6h18v-6"/><path d="M14 4v13m-5-5 5 5 5-5"/></svg>
+            <span><b>In</b><small>Food coming in</small></span>
+          </button>
+          <button class="mode-btn" type="button" data-mode="out" aria-pressed="false">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><path d="M5 17v6h18v-6"/><path d="M14 17V4m-5 5 5-5 5 5"/></svg>
+            <span><b>Out</b><small>Handing out</small></span>
+          </button>
+          <button class="mode-btn" type="button" data-mode="waste" aria-pressed="false">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" aria-hidden="true"><path d="M5 8h18M11 8V5h6v3M7.5 8l1.2 15h10.6l1.2-15M12 12v7M16 12v7"/></svg>
+            <span><b>Waste</b><small>Throwing away</small></span>
+          </button>
+        </div>
+
+        <form class="scan-panel" id="scan-form" autocomplete="off">
+          <div class="scan-band">
+            <label class="scan-title" for="scan-input" id="scan-title">Scanning food in</label>
+            <span class="ready"><span class="ready-on">Ready to scan</span><span class="ready-off">Not ready. Click the scan field.</span></span>
+          </div>
+          <div class="scan-body">
+            <input class="scan-input" id="scan-input" inputmode="numeric" placeholder="Scan a barcode">
+            <div class="feedback" id="feedback" aria-live="polite" hidden></div>
+          </div>
+        </form>
+
+        <!-- Shown in In mode after a scan: how many, and the date on the package -->
+        <form class="card stack" id="add-form" novalidate hidden>
+          <div><h2 id="add-title">Product</h2><p class="muted small" id="add-info"></p></div>
+          <div class="row-2">
+            <div class="field">
+              <label for="add-qty">How many?</label>
+              <input id="add-qty" type="number" min="1" max="200" value="1">
+            </div>
+            <div class="field">
+              <label for="add-date">Date on the package</label>
+              <input id="add-date" type="date">
+            </div>
+          </div>
+          <p class="error" id="add-error" role="alert" hidden></p>
+          <div class="actions">
+            <button class="btn btn-mode" type="submit">Put on the shelf</button>
+            <button class="btn btn-quiet" type="button" id="add-cancel">Cancel</button>
+          </div>
+        </form>
+
+        <!-- Shown after an unknown barcode -->
+        <form class="card stack" id="register-form" novalidate hidden>
+          <div><h2>Register product</h2><p class="muted small">Barcode <b id="register-code"></b></p></div>
+          <div class="field">
+            <label for="register-name">Product name</label>
+            <input id="register-name" placeholder="For example: Oat flakes">
+          </div>
+          <div class="row-2">
+            <div class="field">
+              <label for="register-size">Pack size</label>
+              <input id="register-size" placeholder="For example: 500 g">
+            </div>
+            <div class="field">
+              <label for="register-minimum">Minimum stock</label>
+              <input id="register-minimum" type="number" min="0" max="500" value="10">
+            </div>
+          </div>
+          <p class="error" id="register-error" role="alert" hidden></p>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">Register product</button>
+            <button class="btn btn-quiet" type="button" id="register-cancel">Cancel</button>
+          </div>
+        </form>
+
+        <div class="card stack">
+          <div><h2>Test without a scanner</h2><p class="muted small">Click a product to scan its barcode.</p></div>
+          <div class="chips" id="test-buttons"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="head"><h2>Latest scans</h2><span class="muted small" id="week-totals"></span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>Mode</th><th>Product</th><th class="num">On the shelf</th></tr></thead>
+            <tbody id="scan-log"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: Pickups (volunteer). In Flask this could be templates/pickups.html -->
+  <section class="page" id="page-pickups" hidden>
+    <div class="page-head">
+      <h1>Pickups</h1>
+      <p>Accept a donation, pick it up, then scan it in at the scan station.</p>
+    </div>
+    <div class="grid-2">
+      <div class="stack">
+        <div class="head"><h2>Waiting for a volunteer</h2><span class="muted small">Shortest date first</span></div>
+        <div class="list" id="waiting-list"></div>
+      </div>
+      <div class="stack">
+        <div class="head"><h2>My pickups</h2><span class="muted small" id="pickup-count"></span></div>
+        <div class="list" id="my-pickups"></div>
+        <p class="muted small" id="done-list"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: Dashboard (manager). In Flask this could be templates/dashboard.html -->
+  <section class="page" id="page-dashboard" hidden>
+    <div class="page-head">
+      <h1>Dashboard</h1>
+      <p>Every scan at the scan station updates these numbers.</p>
+    </div>
+    <div class="counters" id="counters"></div>
+    <div class="grid-wide">
+      <div class="card">
+        <div class="head"><h2>Stock per product</h2><span class="muted small">Lowest first</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Product</th><th class="num">On the shelf</th><th class="num narrow-hide">Minimum</th><th>Status</th></tr></thead>
+            <tbody id="stock-table"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card first-on-phone">
+        <h2>Needs attention</h2>
+        <ul class="attention" id="attention"></ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="head"><h2>Food in, out and waste</h2><span class="muted small" id="waste-rate"></span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Week</th><th class="num c-in">Came in</th><th class="num c-out">Handed out</th><th class="num c-waste">Thrown away</th><th class="num narrow-hide">Waste %</th></tr></thead>
+          <tbody id="flow-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: Shopping list (manager). In Flask this could be templates/shopping.html -->
+  <section class="page" id="page-shopping" hidden>
+    <div class="page-head">
+      <h1>Shopping list</h1>
+      <p>Buy these amounts so the shelves don't run empty next week.</p>
+    </div>
+    <div class="card stack">
+      <h2>How the prediction works</h2>
+      <ol class="steps">
+        <li><b>Prediction:</b> the average number handed out per week over the last 4 weeks.</li>
+        <li><b>Extra:</b> 20% of the prediction, in case more people come.</li>
+        <li><b>To buy:</b> prediction + extra − what is on the shelf. Never below 0.</li>
+      </ol>
+      <p class="example" id="example"></p>
+    </div>
+    <div class="card">
+      <div class="head"><h2>To buy for next week</h2><span class="muted small" id="runs-out-count"></span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Product</th><th class="narrow-hide">Handed out, last 4 weeks</th><th class="num">Prediction</th><th class="num">On the shelf</th><th class="narrow-hide">Next week</th><th class="num">To buy</th></tr></thead>
+          <tbody id="shopping-table"></tbody>
+          <tfoot><tr><td>Total to buy</td><td class="narrow-hide"></td><td></td><td></td><td class="narrow-hide"></td><td class="num"><span class="buy" id="buy-total"></span></td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
