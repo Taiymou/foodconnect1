@@ -266,6 +266,19 @@
         <ul class="attention" id="attention"></ul>
       </div>
     </div>
+    <div class="card" id="forecast-card">
+      <div class="list-head"><h2>Forecast for the next 7 days</h2><span class="small muted">Highest risk first</span></div>
+      <p class="muted">Predicted with Machine Learning. Linear Regression estimates how many items will be handed out, from the last weeks. A Decision Tree Classifier estimates the risk of running out. There are only a few weeks of history, so read these as estimates.</p>
+      <p class="muted" id="forecast-loading" role="status">Loading the predictions…</p>
+      <p class="error" id="forecast-error" role="alert" hidden><span></span> <button class="btn btn-grey btn-small forecast-retry" type="button">Try again</button></p>
+      <div class="table-box" id="forecast-box" hidden>
+        <table>
+          <thead><tr><th>Product</th><th class="num">Current stock</th><th class="num">Predicted demand</th><th>Shortage risk</th><th class="hide-on-phone">AI model</th></tr></thead>
+          <tbody id="forecast-table"></tbody>
+        </table>
+      </div>
+      <p class="small muted" id="forecast-models" hidden></p>
+    </div>
     <div class="card">
       <div class="list-head"><h2>Food in, out and waste</h2><span class="small muted" id="waste-rate"></span></div>
       <div class="table-box">
@@ -281,22 +294,24 @@
   <section class="page" id="page-shopping" hidden>
     <div class="page-head">
       <h1>Shopping list</h1>
-      <p>Buy these amounts so the shelves don't run empty next week.</p>
+      <p>Buy these amounts so the shelves don't run empty in the next 7 days.</p>
     </div>
     <div class="card">
       <h2>How the prediction works</h2>
       <ol class="how">
-        <li><span class="how-number">1</span><div><b>Prediction</b><p class="muted">The average number handed out per week over the last 4 weeks.</p></div></li>
-        <li><span class="how-number">2</span><div><b>Extra</b><p class="muted">20% of the prediction, in case more people come.</p></div></li>
+        <li><span class="how-number">1</span><div><b>Prediction</b><p class="muted">Machine Learning (Linear Regression) finds the trend in the items handed out over the last weeks and predicts the next 7 days.</p></div></li>
+        <li><span class="how-number">2</span><div><b>Extra</b><p class="muted"><span id="extra-percent">20</span>% of the prediction, in case more people come.</p></div></li>
         <li><span class="how-number">3</span><div><b>To buy</b><p class="muted">Prediction + extra − what is on the shelf. Never below 0.</p></div></li>
       </ol>
-      <p class="example" id="example"></p>
+      <p class="example" id="example" hidden></p>
     </div>
     <div class="card">
-      <div class="list-head"><h2>To buy for next week</h2><span class="small muted" id="runs-out-count"></span></div>
-      <div class="table-box">
+      <div class="list-head"><h2>To buy for the next 7 days</h2><span class="small muted" id="runs-out-count"></span></div>
+      <p class="muted" id="shopping-loading" role="status">Loading the predictions…</p>
+      <p class="error" id="shopping-error" role="alert" hidden><span></span> <button class="btn btn-grey btn-small forecast-retry" type="button">Try again</button></p>
+      <div class="table-box" id="shopping-box" hidden>
         <table>
-          <thead><tr><th>Product</th><th class="hide-on-phone">Handed out, last 4 weeks</th><th class="num hide-on-phone">Prediction</th><th class="num">On the shelf</th><th class="hide-on-phone">Next week</th><th class="num">To buy</th></tr></thead>
+          <thead><tr><th>Product</th><th class="hide-on-phone">Handed out, last weeks</th><th class="num hide-on-phone">Predicted demand</th><th class="num">On the shelf</th><th class="hide-on-phone">Shortage risk</th><th class="num">To buy</th></tr></thead>
           <tbody id="shopping-table"></tbody>
         </table>
       </div>
@@ -322,6 +337,7 @@
 <script src="{{ url_for('static', filename='js/helpers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 <script src="{{ url_for('static', filename='js/stock.js') }}"></script>
+<script src="{{ url_for('static', filename='js/forecast.js') }}"></script>
 <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 <script src="{{ url_for('static', filename='js/donate.js') }}"></script>
 <script src="{{ url_for('static', filename='js/scan.js') }}"></script>

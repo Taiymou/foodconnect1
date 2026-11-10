@@ -24,6 +24,7 @@ async function logIn(email, password) {
   }
   token = answer.token;
   currentUser = answer.user;
+  resetForecast();   // predictions from an earlier log in may be out of date
   hideMessage('login-error');
   location.hash = MENU[currentUser.role][0].page;
   showPage();

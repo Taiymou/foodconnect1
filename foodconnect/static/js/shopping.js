@@ -1,25 +1,47 @@
 /* FoodConnect: manager, shopping list
-   The Shopping list page: what to buy for next week. */
+   The Shopping list page: what to buy for the next 7 days.
+   The suggested amounts come from Flask (Linear Regression, see the ai folder). */
 
 let buyAmounts = {};   // the amounts the manager changed, by barcode. The other products use the suggestion.
+
+// The amount Flask suggests for a product. 0 when there is no prediction for it.
+function suggestedOf(product) {
+  const f = forecastOf(product);
+  if (!hasPrediction(f)) return 0;
+  return f.toBuy;
+}
 
 // The amount on the list: the manager's own amount, or else the suggestion
 function amountToBuy(product) {
   if (buyAmounts[product.barcode] !== undefined) return buyAmounts[product.barcode];
-  return toBuyOf(product);
+  return suggestedOf(product);
 }
 
 function drawShopping() {
+  getForecastIfNeeded();   // asks Flask for new predictions when the data changed
+  const ready = showForecastState('shopping-loading', 'shopping-error');
+  byId('shopping-box').hidden = !ready;
+  byId('example').hidden = !ready;
+  if (!ready) {
+    byId('runs-out-count').textContent = '';
+    byId('buy-total').textContent = '–';
+    return;
+  }
+  byId('extra-percent').textContent = forecast.extraPercent;
+
   let html = '';
-  let runsOut = 0;
   for (const p of products) {
-    const prediction = predictionOf(p);
+    const f = forecastOf(p);
     const amount = amountToBuy(p);
-    const suggested = toBuyOf(p);
-    let nextWeek = tag('Enough', 'grey');
-    if (stockOf(p) < prediction) {
-      nextWeek = tag('Runs out', 'orange');
-      runsOut++;
+    const suggested = suggestedOf(p);
+    let prediction = '–';
+    let history = p.lastWeeks.join(', ');
+    let note = 'Suggested: ' + suggested;
+    if (hasPrediction(f)) {
+      prediction = f.predictedDemand;
+    } else {
+      history = 'Not enough yet';
+      note = 'No suggestion yet';
     }
     // A changed amount gets a black stepper, with the suggestion under it
     let stepperClass = 'stepper';
@@ -30,31 +52,39 @@ function drawShopping() {
     }
     html += `<tr>
         <td><span class="name">${esc(p.name)}</span><span class="sub">${esc(p.size)}</span></td>
-        <td class="hide-on-phone muted">${p.lastWeeks.join(', ')}</td>
+        <td class="hide-on-phone muted">${history}</td>
         <td class="num hide-on-phone">${prediction}</td>
         <td class="num">${stockOf(p)}</td>
-        <td class="hide-on-phone">${nextWeek}</td>
+        <td class="hide-on-phone">${riskTag(f)}</td>
         <td class="num">
           <div class="${stepperClass}">
             <button class="stepper-minus" type="button" data-barcode="${p.barcode}" aria-label="Remove one"${amount <= 0 ? ' disabled' : ''}>−</button>
             <input value="${amount}" data-barcode="${p.barcode}" inputmode="numeric" aria-label="To buy, ${esc(p.name)}">
             <button class="stepper-plus" type="button" data-barcode="${p.barcode}" aria-label="Add one">+</button>
           </div>
-          <span class="suggested"${noteHidden}>Suggested: ${suggested}</span>
+          <span class="suggested"${noteHidden}>${note}</span>
         </td>
       </tr>`;
   }
   byId('shopping-table').innerHTML = html;
-  byId('runs-out-count').textContent = runsOut + ' of ' + products.length + ' products will probably run out';
+  const highRisk = countHighRisk();
+  byId('runs-out-count').textContent = highRisk + ' of ' + products.length + ' products have a high risk of running out';
   drawTotal();
 
-  // A worked example with the first product, so everyone can follow the maths
-  const p = products[0];
-  const average = (p.lastWeeks[0] + p.lastWeeks[1] + p.lastWeeks[2] + p.lastWeeks[3]) / 4;
-  byId('example').innerHTML =
-    '<b>Example, ' + esc(p.name) + ':</b> (' + p.lastWeeks.join(' + ') + ') ÷ 4 = ' + average + ', so about ' + predictionOf(p) + ' next week. ' +
-    'Extra: 20% of ' + predictionOf(p) + ' is ' + extraOf(p) + '. ' +
-    'To buy: ' + predictionOf(p) + ' + ' + extraOf(p) + ' − ' + stockOf(p) + ' on the shelf = ' + toBuyOf(p) + '.';
+  // A worked example with the first product that has a prediction, so everyone can follow the steps.
+  // Every number in it comes from Flask.
+  byId('example').hidden = true;
+  for (const p of products) {
+    const f = forecastOf(p);
+    if (!hasPrediction(f)) continue;
+    byId('example').innerHTML =
+      '<b>Example, ' + esc(p.name) + ':</b> handed out ' + p.lastWeeks.join(', ') + ' in the last ' + p.lastWeeks.length + ' weeks. ' +
+      'Linear Regression predicts ' + f.predictedDemand + ' for the next 7 days. ' +
+      'Extra: ' + forecast.extraPercent + '% of ' + f.predictedDemand + ' is ' + f.extra + '. ' +
+      'To buy: ' + f.predictedDemand + ' + ' + f.extra + ' − ' + f.stock + ' on the shelf = ' + f.toBuy + '.';
+    byId('example').hidden = false;
+    break;
+  }
 }
 
 // The total in the black bar. It changes straight away when an amount changes.
@@ -87,7 +117,7 @@ byId('shopping-table').addEventListener('input', function (event) {
   if (isNaN(amount) || amount < 0) amount = 0;
   buyAmounts[product.barcode] = amount;
   const row = event.target.closest('tr');
-  if (amount === toBuyOf(product)) {
+  if (amount === suggestedOf(product)) {
     row.querySelector('.suggested').hidden = true;
     row.querySelector('.stepper').className = 'stepper';
   } else {

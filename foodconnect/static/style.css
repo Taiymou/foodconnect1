@@ -14,6 +14,8 @@
   --red-light: #FBE9E7;
   --orange: #8A4A00;
   --orange-light: #FCEFDC;
+  --green: #1F6B36;
+  --green-light: #E3F3E7;
 }
 
 * { box-sizing: border-box; }
@@ -143,12 +145,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .search:focus-within { outline: 3px solid var(--black); outline-offset: 2px; }
 
 
-/* ----- Tags: grey for normal, red and orange for problems ----- */
+/* ----- Tags: grey for normal, red and orange for problems, green for a low risk ----- */
 
 .tag { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 6px; font-size: 13px; font-weight: 700; white-space: nowrap; }
 .tag-grey { background: var(--grey-fill); color: var(--black); }
 .tag-red { background: var(--red-light); color: var(--red); }
 .tag-orange { background: var(--orange-light); color: var(--orange); }
+.tag-green { background: var(--green-light); color: var(--green); }
 
 
 /* ----- Chips: tap one to filter. The chip that is on is black. ----- */
