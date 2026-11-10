@@ -1,5 +1,5 @@
 # FoodConnect: the server, made with Flask.
-# 1. Install Flask once:    pip install flask
+# 1. Install once:          pip install -r requirements.txt
 # 2. Start the website:     python app.py
 # 3. Open in your browser:  http://127.0.0.1:5000
 #
@@ -66,7 +66,8 @@ users = [
 CATEGORIES = ["Pasta, rice and grains", "Beans and legumes", "Vegetables and fruit", "Dairy", "Oil and spreads", "Fish and meat"]
 
 # Each product has a barcode, a category, a minimum stock, how many were handed out in each of the
-# last 4 weeks, and batches: how many items on the shelf have which date on the package.
+# last 4 weeks (oldest week first), and batches: how many items on the shelf have which date on the
+# package. The handed-out numbers are the history that the prediction learns from (see the ai folder).
 products = [
     {"barcode": "2001230000011", "name": "Wholegrain pasta", "size": "500 g", "category": "Pasta, rice and grains", "minimum": 20, "lastWeeks": [35, 37, 38, 41], "batches": [{"qty": 17, "date": day_from_today(160)}]},
     {"barcode": "2001230000028", "name": "Brown rice", "size": "1 kg", "category": "Pasta, rice and grains", "minimum": 15, "lastWeeks": [27, 24, 26, 25], "batches": [{"qty": 46, "date": day_from_today(240)}]},
@@ -433,14 +434,37 @@ def register_product():
         return error("This barcode is already registered.")
     if size == "":
         size = "No pack size"
-    product = {"barcode": barcode, "name": name, "size": size, "category": category, "minimum": minimum, "lastWeeks": [0, 0, 0, 0], "batches": []}
+    product = {"barcode": barcode, "name": name, "size": size, "category": category, "minimum": minimum, "lastWeeks": [], "batches": []}   # no history yet, so no prediction yet
     products.append(product)
     add_to_log("new", product, 0)
     changed()
     return jsonify(state=state_for(user))
 
 
-# ---------- 7. Start ----------
+# ---------- 7. Manager: the forecast (Machine Learning) ----------
+
+@app.get("/api/forecast")
+def forecast():
+    # The predictions for the dashboard and the shopping list. The models are in the ai folder:
+    # Linear Regression predicts the demand for the next 7 days, and a Decision Tree Classifier
+    # predicts the risk that a product runs out. See ai/forecast.py for how they work together.
+    user = get_user()
+    if user is None:
+        return not_logged_in()
+    if user["role"] != "manager":
+        return error("Your account can't do this.")
+    try:
+        # Imported here, so the rest of the website still works when scikit-learn is not installed
+        from ai.forecast import make_forecast
+        result = make_forecast(products, donations)
+    except Exception as problem:
+        app.logger.error("The forecast failed: %s", problem)
+        return jsonify(error="The predictions are not available right now.", hint="Run: pip install -r requirements.txt"), 503
+    result["version"] = version   # the version of the data these predictions belong to
+    return jsonify(result)
+
+
+# ---------- 8. Start ----------
 
 if __name__ == "__main__":
     app.run(debug=True)

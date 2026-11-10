@@ -1,17 +1,16 @@
 /* FoodConnect: manager, dashboard
-   The Dashboard page: stock, things that need attention, and food in, out and waste. */
+   The Dashboard page: stock, things that need attention, the forecast, and food in, out and waste. */
 
 let stockCategory = 'All';   // the chip that is on, above the stock table
 
 function drawDashboard() {
+  getForecastIfNeeded();   // asks Flask for new predictions when the data changed
   let onShelf = 0;
   let low = 0;
   let closeToDate = 0;
-  let runsOut = 0;
   for (const p of products) {
     onShelf += stockOf(p);
     if (statusOf(p).color === 'red') low++;
-    if (stockOf(p) < predictionOf(p)) runsOut++;
     for (const b of p.batches) {
       if (daysLeft(b.date) <= 7) closeToDate += b.qty;
     }
@@ -40,12 +39,16 @@ function drawDashboard() {
       }
     }
   }
-  if (runsOut > 0) {
-    soon += `<li>${tag('Runs out next week', 'orange')}<span>${runsOut} products will probably run out.</span><a href="#shopping">See the shopping list</a></li>`;
+  // From the forecast (Machine Learning): how many products have a high risk of running out
+  const highRisk = countHighRisk();
+  if (highRisk > 0) {
+    urgent += `<li>${tag('High risk', 'red')}<span>${highRisk} ${plural(highRisk, 'product has', 'products have')} a high risk of running out in the next 7 days.</span><a href="#shopping">See the shopping list</a></li>`;
   }
   let attention = urgent + soon;
   if (attention === '') attention = '<li class="muted">Nothing needs attention.</li>';
   byId('attention').innerHTML = attention;
+
+  drawForecast();
 
   // Food in, out and waste per week (FR13)
   let html = '';
